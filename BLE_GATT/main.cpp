@@ -1,9 +1,16 @@
 #include "mbed.h"
 #include "ble/BLE.h"
 
-DigitalOut led(P0_19, 1);
-DigitalOut led2(P0_4, 0);
+DigitalOut led(P0_19, 0);
+DigitalOut led2(P0_4, 1);
 InterruptIn button(P0_5);
+
+bool visible = true;
+bool connected = false;
+
+Gap::GapState_t currentState;
+
+BLE& ble = BLE::Instance(BLE::DEFAULT_INSTANCE);
 
 //DigitalIn buttonInputPin(P0_10);
 
@@ -15,7 +22,7 @@ const static char     DEVICE_NAME[]        = "Inhaler Cap"; // change this
 static const uint16_t uuid16_list[]        = {0xFFFF}; //Custom UUID, FFFF is reserved for development
 
 /* Set Up custom Characteristics */
-static uint8_t readValue[10] = {0,1,2,3,4,5};
+static uint8_t readValue[10] = {0};
 ReadOnlyArrayGattCharacteristic<uint8_t, sizeof(readValue)> readChar(readCharUUID, readValue);
 
 static uint8_t writeValue[10] = {0};
@@ -26,14 +33,33 @@ GattCharacteristic *characteristics[] = {&readChar, &writeChar};
 GattService        customService(customServiceUUID, characteristics, sizeof(characteristics) / sizeof(GattCharacteristic *));
 
 
+void changeLED(){
+        led2 = !led2;
+        wait_ms(250);   
+}
+
 /*
  *  Restart advertising when phone app disconnects
 */
 void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *)
 {
-    BLE::Instance(BLE::DEFAULT_INSTANCE).gap().startAdvertising();
+   visible = true;
+   ble.gap().stopAdvertising();
+   for(int i = 0; i<4; i++){
+        led2 = !led2;
+        wait_ms(250);
+    }
+   // BLE::Instance(BLE::DEFAULT_INSTANCE).gap().startAdvertising();
 }
 
+void connectionCallback(const Gap::ConnectionCallbackParams_t *){
+    printf("Connected\n\r");    
+    for(int i = 0; i<5; i++){
+        led2 = !led2;
+        wait_ms(250);
+    }
+    visible = false;
+}
 /*
  *  Handle writes to writeCharacteristic
 */
@@ -71,6 +97,7 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
     }
 
     ble.gap().onDisconnection(disconnectionCallback);
+    ble.gap().onConnection(connectionCallback);
     ble.gattServer().onDataWritten(writeCharCallback);
 
     /* Setup advertising */
@@ -84,16 +111,31 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
     ble.addService(customService);
 
     /* Start advertising */
-    ble.gap().startAdvertising();
+//   ble.gap().startAdvertising();
 }
 
-void ledBlink(){
+    
+
+void buttonPressed(){
     if(button){
-        led2 = !led2;
-        wait_ms(25);
-        printf("debounce\n\r");
+        if(visible){
+          /* Start advertising */
+            ble.gap().startAdvertising();
+            led2 = 0;
+            printf("Advertising\n\r");
+            visible = false;
+        }
+        else{
+            ble.gap().stopAdvertising();
+            led2 = 1;
+            printf("Not advertising\n\r");
+            visible = true;
+
+        }
      }
 }
+
+
 
 /*
  *  Main loop
@@ -105,22 +147,20 @@ int main(void)
     /* initialize stuff */
     printf("\n\r********* Starting Main Loop *********\n\r");
     
-    BLE& ble = BLE::Instance(BLE::DEFAULT_INSTANCE);
+   // &ble = BLE::Instance(BLE::DEFAULT_INSTANCE);
     ble.init(bleInitComplete);
     
     /* SpinWait for initialization to complete. This is necessary because the
      * BLE object is used in the main loop below. */
     while (ble.hasInitialized()  == false) {
         
-        }
+    }
 
     /* Infinite loop waiting for BLE interrupt events */
     
-    button.rise(&ledBlink);  
-
-    while (true) {
-         led = !led;
-         wait_ms(1000);    
-        //ble.waitForEvent(); /* Save power */
+    button.rise(&buttonPressed); 
+    while(true){
+        printf("test inside loop \n\r");
+        ble.waitForEvent(); // Save power 
     }
 }
