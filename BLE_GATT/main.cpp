@@ -22,7 +22,7 @@ const static char     DEVICE_NAME[]        = "Inhaler Cap"; // change this
 static const uint16_t uuid16_list[]        = {0xFFFF}; //Custom UUID, FFFF is reserved for development
 
 /* Set Up custom Characteristics */
-static uint8_t readValue[10] = {0};
+static uint8_t readValue[1] = {0};
 ReadOnlyArrayGattCharacteristic<uint8_t, sizeof(readValue)> readChar(readCharUUID, readValue);
 
 static uint8_t writeValue[10] = {0};
@@ -49,6 +49,7 @@ void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *)
         led2 = !led2;
         wait_ms(250);
     }
+    connected = false;
    // BLE::Instance(BLE::DEFAULT_INSTANCE).gap().startAdvertising();
 }
 
@@ -58,6 +59,7 @@ void connectionCallback(const Gap::ConnectionCallbackParams_t *){
         led2 = !led2;
         wait_ms(250);
     }
+    connected = true;
     visible = false;
 }
 /*
@@ -126,11 +128,17 @@ void buttonPressed(){
             visible = false;
         }
         else{
-            ble.gap().stopAdvertising();
-            led2 = 1;
-            printf("Not advertising\n\r");
-            visible = true;
-
+            if(connected){
+                readValue[0] = (readValue[0] + 1u);
+                BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
+                printf("value of readvalue: %i",readValue[0]);
+            }
+            else{
+                ble.gap().stopAdvertising();
+                led2 = 1;
+                printf("Not advertising\n\r");
+                visible = true;
+            }
         }
      }
 }
