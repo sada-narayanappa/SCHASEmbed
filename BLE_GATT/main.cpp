@@ -43,6 +43,7 @@ void changeLED(){
 */
 void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *)
 {
+   printf("Disconnect callback called\n\r");
    visible = true;
    ble.gap().stopAdvertising();
    for(int i = 0; i<4; i++){
@@ -116,31 +117,49 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
 //   ble.gap().startAdvertising();
 }
 
+void beginAdvertise(){
+    ble.gap().startAdvertising();
+    led2 = 0;
+    printf("Advertising\n\r");
+    visible = false;
+}
+
+void stopAdvertise(){
+    ble.gap().stopAdvertising();
+    led2 = 1;
+    printf("Not advertising\n\r");
+    visible = true;  
+}
+
+void incrememntInhalerCount(){
+    readValue[0] = (readValue[0] + 1u);
+    BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
+    printf("value of readvalue: %i \n\r",readValue[0]);    
+}  
+
+int buttonDuration(){
+    int counter = 0;
+    while(button && counter<3000){
+        counter++;
+        wait_ms(1);
+    }    
     
+    return counter;
+}
 
 void buttonPressed(){
-    if(button){
-        if(visible){
-          /* Start advertising */
-            ble.gap().startAdvertising();
-            led2 = 0;
-            printf("Advertising\n\r");
-            visible = false;
+    int counterValue = buttonDuration();
+    printf("Counter Value: %i \r\n", counterValue);
+    if(counterValue >= 3000){
+        if(visible && !connected){
+            beginAdvertise();
         }
-        else{
-            if(connected){
-                readValue[0] = (readValue[0] + 1u);
-                BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
-                printf("value of readvalue: %i",readValue[0]);
-            }
-            else{
-                ble.gap().stopAdvertising();
-                led2 = 1;
-                printf("Not advertising\n\r");
-                visible = true;
-            }
+        else if(!visible && !connected){
+            stopAdvertise();           
         }
-     }
+    }
+    else{incrememntInhalerCount();}
+   
 }
 
 
