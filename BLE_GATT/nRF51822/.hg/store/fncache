@@ -108,7 +108,7 @@ data/source/nRF51Gap.cpp.i
 data/common/binary.h.i
 data/source/nordic-sdk/components/libraries/bootloader_dfu/dfu_app_handler.c.i
 data/nordic/nrf-sdk/ble/ble_services/ble_bas.h.i
-data/source/nordic-sdk/components/drivers_nrf/hal/nrf51_deprecated.h.i
+data/nrf51-sdk.lib.i
 data/source/btle/btle.h.i
 data/source/nordic-sdk/components/softdevice/s130/headers/nrf_error_soc.h.i
 data/source/nordic_sdk/components/ble/peer_manager/id_manager.c.i
@@ -474,6 +474,7 @@ data/nordic/nrf-sdk/ble/rpc/ble_rpc_event_decoder_gap.h.i
 data/source/nordic_sdk/components/softdevice/s130/headers/ble_gattc.h.i
 data/source/nordic-sdk/components/softdevice/s130/include/ble_l2cap.h.i
 data/nordic-sdk/components/libraries/bootloader_dfu/dfu_ble_svc_internal.h.i
+data/CHANGELOG.md.i
 data/nordic/nrf-sdk/s110/ble_gatt.h.i
 data/source/nordic_sdk/components/ble/common/ble_advdata.h.i
 data/source/nordic_sdk/components/libraries/util/app_error.c.i
@@ -489,6 +490,7 @@ data/btle/btle_security.h.i
 data/nordic/nrf-sdk/ble/ble_services/ble_hrs_c.h.i
 data/nordic-sdk/components/softdevice/s130/include/nrf_svc.h.i
 data/nordic/nrf-sdk/s110/ble_gap.h.i
+data/source/nordic-sdk/components/drivers_nrf/hal/nrf51_deprecated.h.i
 data/source/nordic_sdk/components/libraries/util/sdk_common.h.i
 data/nordic/nrf-sdk/ble/ble_services/ble_dis.h.i
 data/source/nordic-sdk/components/softdevice/s130/include/nrf_svc.h.i

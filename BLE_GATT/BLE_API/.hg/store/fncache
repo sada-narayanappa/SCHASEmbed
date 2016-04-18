@@ -16,6 +16,7 @@ data/bleservice.cpp.i
 data/hw/nrf51822.cpp.i
 data/common/BLEDevice.cpp.i
 data/mbed.bld.i
+data/common/BLEDeviceInstanceBase.hpp.i
 data/ble/services/EddystoneConfigService.h.i
 data/common/GapScanningParams.cpp.i
 data/public/BLEDevice.h.i
@@ -56,7 +57,7 @@ data/ble/GapScanningParams.h.i
 data/ble/UUID.h.i
 data/source/services/DFUService.cpp.i
 data/ble/ServiceDiscovery.h.i
-data/common/BLEDeviceInstanceBase.hpp.i
+data/CHANGELOG.md.i
 data/public/ServiceDiscovery.h.i
 data/services/URIBeaconConfigService.cpp.i
 data/DOXYGEN_FRONTPAGE.md.i

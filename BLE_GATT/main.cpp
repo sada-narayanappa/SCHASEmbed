@@ -1,5 +1,6 @@
 #include "mbed.h"
 #include "ble/BLE.h"
+#include "nrf51_rtc.h"
 
 DigitalOut led(P0_19, 0);
 DigitalOut led2(P0_4, 1);
@@ -22,7 +23,7 @@ const static char     DEVICE_NAME[]        = "Inhaler Cap"; // change this
 static const uint16_t uuid16_list[]        = {0xFFFF}; //Custom UUID, FFFF is reserved for development
 
 /* Set Up custom Characteristics */
-static uint8_t readValue[1] = {0};
+static uint8_t readValue[4] = {0};
 ReadOnlyArrayGattCharacteristic<uint8_t, sizeof(readValue)> readChar(readCharUUID, readValue);
 
 static uint8_t writeValue[10] = {0};
@@ -137,6 +138,17 @@ void incrememntInhalerCount(){
     printf("value of readvalue: %i \n\r",readValue[0]);    
 }  
 
+void displayRtcTime()
+{
+    unsigned int curr_time = rtc.time();
+    for(int i = 0; i < 4; i++)
+    {
+        readValue[3-i] = ((curr_time >> i*8) & 255);
+    }
+    BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
+    printf("value of readvalue: %i \n\r",readValue[0]);    
+}  
+
 int buttonDuration(){
     int counter = 0;
     while(button && counter<3000){
@@ -158,11 +170,12 @@ void buttonPressed(){
             stopAdvertise();           
         }
     }
-    else{incrememntInhalerCount();}
+    else if(counterValue >= 1500) rtc.set_time(0);
+    else{ /*incrememntInhalerCount();*/ displayRtcTime(); }
    
 }
 
-
+void update_time() { rtc.update_rtc(); }
 
 /*
  *  Main loop
@@ -173,6 +186,10 @@ int main(void)
     //buttonInputPin.mode(PullUp);
     /* initialize stuff */
     printf("\n\r********* Starting Main Loop *********\n\r");
+    
+    #define PERIODIC_UPDATE 480 // Update every 8 minutes.
+    Ticker rtc_ticker;
+    rtc_ticker.attach(&update_time, PERIODIC_UPDATE); // update the time regularly
     
    // &ble = BLE::Instance(BLE::DEFAULT_INSTANCE);
     ble.init(bleInitComplete);
