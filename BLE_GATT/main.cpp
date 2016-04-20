@@ -146,8 +146,17 @@ void displayRtcTime()
 {
     unsigned int curr_time = rtc.time();
     
-    for(int i = 0; i < 4; i++)
-        readValue[3-i] = (uint8_t)((curr_time>>8*i)&255);
+    int s = curr_time%60;
+    int m = (curr_time/60)%60;
+    int h = (curr_time/3600)%24;
+    int d = (curr_time/86400);
+    
+    readValue[3] = s + 6*((s/10)%10);
+    readValue[2] = m + 6*((m/10)%10);
+    readValue[1] = h + 6*((h/10)%10);
+    readValue[0] = d + 6*((d/10)%10);
+    
+    // for(int i = 0; i < 4; i++) readValue[3-i] = (curr_time>>8*i)&255; // Use this if time isn't being displayed correctly otherwise.
         
     BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
     printf("value of readvalue: %i \n\r",readValue[0]);    
