@@ -34,7 +34,8 @@ GattCharacteristic *characteristics[] = {&readChar, &writeChar};
 GattService        customService(customServiceUUID, characteristics, sizeof(characteristics) / sizeof(GattCharacteristic *));
 
 
-void changeLED(){
+void changeLED()
+{
         led2 = !led2;
         wait_ms(250);   
 }
@@ -118,21 +119,24 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
 //   ble.gap().startAdvertising();
 }
 
-void beginAdvertise(){
+void beginAdvertise()
+{
     ble.gap().startAdvertising();
     led2 = 0;
     printf("Advertising\n\r");
     visible = false;
 }
 
-void stopAdvertise(){
+void stopAdvertise()
+{
     ble.gap().stopAdvertising();
     led2 = 1;
     printf("Not advertising\n\r");
     visible = true;  
 }
 
-void incrememntInhalerCount(){
+void incrememntInhalerCount()
+{
     readValue[0] = (readValue[0] + 1u);
     BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
     printf("value of readvalue: %i \n\r",readValue[0]);    
@@ -141,38 +145,45 @@ void incrememntInhalerCount(){
 void displayRtcTime()
 {
     unsigned int curr_time = rtc.time();
+    
     for(int i = 0; i < 4; i++)
-    {
-        readValue[3-i] = ((curr_time >> i*8) & 255);
-    }
+        readValue[3-i] = (uint8_t)((curr_time>>8*i)&255);
+        
     BLE::Instance(BLE::DEFAULT_INSTANCE).gattServer().write(readChar.getValueHandle(), readValue, sizeof(readValue) / sizeof(readValue[0]));
     printf("value of readvalue: %i \n\r",readValue[0]);    
 }  
 
-int buttonDuration(){
+int buttonDuration()
+{
     int counter = 0;
-    while(button && counter<3000){
+    while(button && counter<6000)
+    {
+        if((counter > 100) && (counter%1000 == 0)) led2 = !led2;
+        else if((counter > 100) && ((counter-100)%1000 == 0)) led2 = !led2;
         counter++;
         wait_ms(1);
     }    
     
+    if((counter%1000 <= 100) && (counter%1000 > 0)) led2 = !led2; // if button released while led is on, turn led off
+    
     return counter;
 }
 
-void buttonPressed(){
+void buttonPressed()
+{
     int counterValue = buttonDuration();
     printf("Counter Value: %i \r\n", counterValue);
-    if(counterValue >= 3000){
-        if(visible && !connected){
+    
+    if(counterValue >= 5000) rtc.set_time(0);
+    else if(counterValue >= 3000)
+    {
+        if(visible && !connected)
             beginAdvertise();
-        }
-        else if(!visible && !connected){
-            stopAdvertise();           
-        }
+            
+        else if(!visible && !connected)
+            stopAdvertise(); 
     }
-    else if(counterValue >= 1500) rtc.set_time(0);
-    else{ /*incrememntInhalerCount();*/ displayRtcTime(); }
-   
+    else displayRtcTime();
 }
 
 void update_time() { rtc.update_rtc(); }
